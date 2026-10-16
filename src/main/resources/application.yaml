@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: UserManagement
+
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: ${DB_USERNAME:APP_USER}
+    password: ${DB_PASSWORD:user123}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000ms
+
+  security:
+    base64Secret: ${JWT_SECRET:ASyTTcIvfHA8QsI2c1Fvc8vZUcaeUgRlHH1VhsElDSYHsJ0CS5N0y5/yvKte+WDvYS3lL0oBzPK+1E83ACSdvA==}
+    tokenValidityInSeconds: 86400
