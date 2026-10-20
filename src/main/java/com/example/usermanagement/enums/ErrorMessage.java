@@ -24,20 +24,25 @@ public enum ErrorMessage implements IErrorMessage {
             "JWT không hợp lệ",
             "Vui lòng thử lại!"),
 
+    CANNOT_GENERATE_TOKEN(
+            "CANNOT.GENERATE.TOKEN",
+            "Không thể tạo token",
+            "Vui lòng thử lại!"),
+
     REQUEST_INVALID_PARAMS(
             "REQUEST.INVALID.PARAMS",
             "Thông tin không hợp lệ",
             "Trường thông tin không được để trống"),
 
-    WRONG_USERNAME(
-            "WRONG.USERNAME",
-            "Tài khoản không tồn tại",
+    WRONG_USERNAME_PASSWORD(
+            "WRONG.USERNAME.PASSWORD",
+            "Sai tài khoản hoặc mật khẩu",
             "Vui lòng kiểm tra lại!"),
 
-    WRONG_PASSWORD(
-            "WRONG.PASSWORD",
-            "Sai mật khẩu",
-            "Vui lòng kiểm tra lại!"),
+    USER_NOT_HAS_ROLE(
+            "USER.NOT.HAS.ROLE",
+            "User không có quyền truy cập",
+            "Vui lòng kiểm tra lại"),
 
     ACCOUNT_INACTIVE(
             "ACCOUNT.INACTIVE",

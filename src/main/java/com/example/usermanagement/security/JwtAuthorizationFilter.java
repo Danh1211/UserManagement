@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -53,24 +54,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                         .orElseThrow(() -> AppException.builder().status(ErrorMessage.INVALID_JWT).build());
                 UserContext.set(sessionInfo);
 
-                List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + sessionInfo.getRoleCode()));
-                if(sessionInfo.getPermissions() != null){
-                    sessionInfo.getPermissions().forEach(p -> authorities.add(new SimpleGrantedAuthority(p)));
-                }
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                Authentication authentication = jwtService.getAuthentication(token, claimsSet);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (AppException e) {
-            log.error("Authentication failed: {}", e.getStatus().getTitle());
+            log.error("Authentication failed: {} - {}", e.getStatus().getErrorCode(), e.getStatus().getTitle());
             SecurityContextHolder.clearContext();
-        }
-        try {
-            filterChain.doFilter(request, response);
+            UserContext.clear();
+        } try {
+            filterChain.doFilter(request, response);   // luôn gọi đúng 1 lần
         } finally {
             UserContext.clear();
+            SecurityContextHolder.clearContext();
         }
     }
 

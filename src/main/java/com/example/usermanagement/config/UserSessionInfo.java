@@ -12,6 +12,7 @@ import java.util.List;
 public class UserSessionInfo {
     private String fullName;
     private String username;
+    private String email;
     private String roleCode;
     private List<String> permissions;
 }
