@@ -2,6 +2,7 @@ package com.example.usermanagement.security;
 
 import com.example.usermanagement.enums.ErrorMessage;
 import com.example.usermanagement.exception.AppException;
+import com.example.usermanagement.exception.NoAuthenticationError;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -18,7 +19,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
@@ -51,7 +51,7 @@ public class JwtService {
             signedJWT.sign(new MACSigner(decodedSecret()));
             return signedJWT.serialize();
         } catch (JOSEException e) {
-            throw new RuntimeException(e);
+            throw AppException.builder().status(ErrorMessage.CANNOT_GENERATE_TOKEN).build();
         }
     }
 
@@ -72,7 +72,7 @@ public class JwtService {
                     claimsSet.getStringClaim("email"));
             return new UsernamePasswordAuthenticationToken(userDetails, token, authorities);
         }catch (ParseException e){
-            throw AppException.builder().status(ErrorMessage.INVALID_JWT).build();
+            throw new NoAuthenticationError("Chưa đăng nhập hoặc token không hợp lệ!");
         }
     }
 
@@ -80,24 +80,24 @@ public class JwtService {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
             if (!JWSAlgorithm.HS512.equals(signedJWT.getHeader().getAlgorithm())) {
-                throw AppException.builder().status(ErrorMessage.INVALID_JWT).build();
+                throw new NoAuthenticationError("Sai thuật toán!");
             }
 
             JWSVerifier verifier = new MACVerifier(decodedSecret());
             if (!signedJWT.verify(verifier)) {
-                throw AppException.builder().status(ErrorMessage.INVALID_SIGNATURE_JWT).build();
+                throw new NoAuthenticationError("Sai chữ ký!");
             }
             JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
             Date exp = claims.getExpirationTime();
             if (exp == null) {
-                throw AppException.builder().status(ErrorMessage.INVALID_JWT).build();
+                throw new NoAuthenticationError("Thiếu thời gian hết hạn!");
             }
             if (exp.before(new Date())) {
-                throw AppException.builder().status(ErrorMessage.JWT_EXPIRED).build();
+                throw new NoAuthenticationError("Token đã hết hạn!");
             }
             return claims;
         } catch (ParseException | JOSEException e) {
-            throw AppException.builder().status(ErrorMessage.INVALID_JWT).build();
+            throw new NoAuthenticationError("JWT không hợp lệ!");
         }
     }
 

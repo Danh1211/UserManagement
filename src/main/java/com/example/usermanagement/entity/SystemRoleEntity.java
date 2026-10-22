@@ -2,7 +2,6 @@ package com.example.usermanagement.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,5 +35,6 @@ public class SystemRoleEntity {
             joinColumns = {@JoinColumn(name = "ROLE_CODE", referencedColumnName = "ROLE_CODE")},
             inverseJoinColumns = {@JoinColumn(name = "PERMISSION_CODE", referencedColumnName = "PERMISSION_CODE")}
     )
+    @Builder.Default
     private Set<SystemPermissionEntity> permissions = new HashSet<>();
 }

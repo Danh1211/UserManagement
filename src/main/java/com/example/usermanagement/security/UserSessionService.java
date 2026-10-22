@@ -37,27 +37,17 @@ public class UserSessionService {
     private RBucket<String> getBucket(String key) {return redisson.getBucket(key, StringCodec.INSTANCE);}
 
     public void cacheToken(String username, String token){
-        try {
-            Duration ttl = Duration.ofSeconds(jwtProperties.getTokenValidityInSeconds());
-            String key = this.getKeyToken(username);
-            this.getBucket(key).set((hashToken(token)), ttl);
-        } catch (Exception e) {
-            log.error("cacheToken error: {}", e.getMessage(), e);
-            throw e;
-        }
+        Duration ttl = Duration.ofSeconds(jwtProperties.getTokenValidityInSeconds());
+        String key = this.getKeyToken(username);
+        this.getBucket(key).set((hashToken(token)), ttl);
     }
 
     public void cacheSession(String username, UserSessionInfo userSession) {
-        try {
-            String key = this.getKeyUserSession(username);
-            String data = objectMapper.writeValueAsString(userSession);
-            Duration ttl = Duration.of(jwtProperties.getTokenValidityInSeconds() + 5 * 60,
+        String key = this.getKeyUserSession(username);
+        String data = objectMapper.writeValueAsString(userSession);
+        Duration ttl = Duration.of(jwtProperties.getTokenValidityInSeconds() + 5 * 60,
                     ChronoUnit.SECONDS);
-            this.getBucket(key).set(data, ttl);
-        }catch (Exception e) {
-            log.error("initCacheSession error: {}", e.getMessage(), e);
-            throw e;
-        }
+        this.getBucket(key).set(data, ttl);
     }
 
     public Optional<UserSessionInfo> getUserSession(String username) {
@@ -72,14 +62,9 @@ public class UserSessionService {
     }
 
     public boolean isValidToken(String username, String token){
-        try {
             String key = this.getKeyToken(username);
             String value = this.getBucket(key).get();
             return StringUtils.hasText(value) && hashToken(token).equals(value);
-        }catch (Exception e){
-            log.error("Validate user token error: {}", e.getMessage());
-            return false;
-        }
     }
 
     public void revoke(String username) {

@@ -1,6 +1,8 @@
 package com.example.usermanagement.service;
 
 import com.example.usermanagement.config.HasPermission;
+import com.example.usermanagement.dtos.common.ApiRequest;
+import com.example.usermanagement.dtos.common.ApiResponse;
 import com.example.usermanagement.dtos.request.PermissionRequest;
 import com.example.usermanagement.dtos.request.RoleRequest;
 import com.example.usermanagement.dtos.response.PermissionResponse;
@@ -28,32 +30,35 @@ public class RoleService {
 
     @Transactional(readOnly = true)
     @HasPermission(value = {"ROLE_VIEW"})
-    public List<RoleResponse> getListRole(){
-        return roleRepository.findAll().stream().map(this::toResponse).toList();
+    public ApiResponse<List<RoleResponse>> getListRole(){
+        return ApiResponse.ok(roleRepository.findAll().stream().map(this::toResponse).toList());
     }
 
     @Transactional(readOnly = true)
     @HasPermission(value = {"ROLE_VIEW"})
-    public RoleResponse getByRoleCode(String roleCode){
-        return toResponse(roleRepository.findByRoleCode(roleCode));
+    public ApiResponse<RoleResponse> getByRoleCode(String roleCode){
+        SystemRoleEntity entity = roleRepository.findByRoleCode(roleCode)
+                .orElseThrow(() -> AppException.builder().status(ErrorMessage.NOT_FOUND).build());
+        return ApiResponse.ok(toResponse(entity));
     }
 
     @Transactional
     @HasPermission(value = {"ROLE_CREATE"})
-    public RoleResponse createRole(RoleRequest request){
-        if(request.getRoleCode() == null || request.getRoleCode().trim().isEmpty()){
+    public ApiResponse<RoleResponse> createRole(ApiRequest<RoleRequest> request){
+        RoleRequest data = request.getData();
+        if(data.getRoleCode() == null || data.getRoleCode().trim().isEmpty()){
             throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
         }
-        if (roleRepository.existsByRoleCode(request.getRoleCode())){
+        if (roleRepository.existsByRoleCode(data.getRoleCode())){
             throw AppException.builder().status(ErrorMessage.ROLE_CODE_EXIST).build();
         }
         SystemRoleEntity roleEntity = new SystemRoleEntity();
-        roleEntity.setRoleCode(request.getRoleCode().toUpperCase());
-        roleEntity.setRoleName(request.getRoleName());
-        roleEntity.setDescription(request.getDescription());
+        roleEntity.setRoleCode(data.getRoleCode().toUpperCase());
+        roleEntity.setRoleName(data.getRoleName());
+        roleEntity.setDescription(data.getDescription());
 
-        if (request.getPermissions() != null && !request.getPermissions().isEmpty()) {
-            List<SystemPermissionEntity> perms = permissionRepository.findAllByPermissionCodeIn(request.getPermissions());
+        if (data.getPermissions() != null && !data.getPermissions().isEmpty()) {
+            List<SystemPermissionEntity> perms = permissionRepository.findAllByPermissionCodeIn(data.getPermissions());
             roleEntity.setPermissions(new HashSet<>(perms));
         } else {
             roleEntity.setPermissions(new HashSet<>());
@@ -61,35 +66,38 @@ public class RoleService {
 
         roleRepository.saveAndFlush(roleEntity);
 
-        return toResponse(roleEntity);
+        return ApiResponse.ok(toResponse(roleEntity));
     }
 
     @Transactional
     @HasPermission(value = {"ROLE_UPDATE"})
-    public RoleResponse updateRole(RoleRequest request){
-        SystemRoleEntity oldEntity = roleRepository.findById(request.getId()).orElseThrow(
+    public ApiResponse<RoleResponse> updateRole(ApiRequest<RoleRequest> request){
+        RoleRequest data = request.getData();
+        if(data.getId() == null){
+            throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
+        }
+        SystemRoleEntity oldEntity = roleRepository.findById(data.getId()).orElseThrow(
                 () ->AppException.builder().status(ErrorMessage.NOT_FOUND).build());
-        if(!request.getRoleCode().equalsIgnoreCase(oldEntity.getRoleCode())){
+        if(!data.getRoleCode().equalsIgnoreCase(oldEntity.getRoleCode())){
             throw AppException.builder().status(ErrorMessage.CANNOT_CHANGE).build();
         }
-        oldEntity.setRoleName(request.getRoleName());
-        oldEntity.setDescription(request.getDescription());
+        oldEntity.setRoleName(data.getRoleName());
+        oldEntity.setDescription(data.getDescription());
 
-        // Cập nhật danh sách permissions trên chính instance collection của Hibernate
         if (oldEntity.getPermissions() == null) {
             oldEntity.setPermissions(new HashSet<>());
         } else {
             oldEntity.getPermissions().clear();
         }
 
-        if (request.getPermissions() != null && !request.getPermissions().isEmpty()) {
-            List<SystemPermissionEntity> perms = permissionRepository.findAllByPermissionCodeIn(request.getPermissions());
+        if (data.getPermissions() != null && !data.getPermissions().isEmpty()) {
+            List<SystemPermissionEntity> perms = permissionRepository.findAllByPermissionCodeIn(data.getPermissions());
             oldEntity.getPermissions().addAll(perms);
         }
 
         SystemRoleEntity saved = roleRepository.saveAndFlush(oldEntity);
 
-        return toResponse(saved);
+        return ApiResponse.ok(toResponse(saved));
     }
 
     private RoleResponse toResponse(SystemRoleEntity entity){

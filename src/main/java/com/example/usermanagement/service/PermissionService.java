@@ -1,6 +1,8 @@
 package com.example.usermanagement.service;
 
 import com.example.usermanagement.config.HasPermission;
+import com.example.usermanagement.dtos.common.ApiRequest;
+import com.example.usermanagement.dtos.common.ApiResponse;
 import com.example.usermanagement.dtos.request.PermissionRequest;
 import com.example.usermanagement.dtos.response.PermissionResponse;
 import com.example.usermanagement.entity.SystemPermissionEntity;
@@ -21,52 +23,56 @@ public class PermissionService {
 
     @Transactional(readOnly = true)
     @HasPermission(value = { "PERMISSION_VIEW", "ROLE_CREATE", "ROLE_UPDATE" })
-    public List<PermissionResponse> getList() {
-        return permissionRepository.findAll().stream().map(this::toResponse).toList();
+    public ApiResponse<List<PermissionResponse>> getList() {
+        return ApiResponse.ok(permissionRepository.findAll().stream().map(this::toResponse).toList());
     }
 
     @Transactional(readOnly = true)
     @HasPermission(value = { "PERMISSION_VIEW", "ROLE_CREATE", "ROLE_UPDATE" })
-    public PermissionResponse getByPermissionCode(String permissionCode) {
-        return toResponse(permissionRepository.findByPermissionCode(permissionCode));
+    public ApiResponse<PermissionResponse> getByPermissionCode(String permissionCode) {
+        SystemPermissionEntity entity = permissionRepository.findByPermissionCode(permissionCode)
+                .orElseThrow(() -> AppException.builder().status(ErrorMessage.NOT_FOUND).build());
+        return ApiResponse.ok(toResponse(entity));
     }
 
     @Transactional
     @HasPermission(value = { "PERMISSION_CREATE" })
-    public PermissionResponse createPermission(PermissionRequest request) {
-        if (request.getPermissionCode() == null || request.getPermissionCode().trim().isEmpty()) {
+    public ApiResponse<PermissionResponse> createPermission(ApiRequest<PermissionRequest> request) {
+        PermissionRequest data = request.getData();
+        if (data.getPermissionCode() == null || data.getPermissionCode().trim().isEmpty()) {
             throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
         }
-        if (permissionRepository.existsByPermissionCode(request.getPermissionCode().trim())) {
+        if (permissionRepository.existsByPermissionCode(data.getPermissionCode().trim())) {
             throw AppException.builder().status(ErrorMessage.PERMISSION_CODE_EXIST).build();
         }
         SystemPermissionEntity entity = new SystemPermissionEntity();
-        entity.setPermissionCode(request.getPermissionCode().trim().toUpperCase());
-        entity.setPermissionName(request.getPermissionName());
-        entity.setModule(request.getModule());
-        entity.setDescription(request.getDescription());
+        entity.setPermissionCode(data.getPermissionCode().trim().toUpperCase());
+        entity.setPermissionName(data.getPermissionName());
+        entity.setModule(data.getModule());
+        entity.setDescription(data.getDescription());
         permissionRepository.saveAndFlush(entity);
 
-        return toResponse(entity);
+        return ApiResponse.ok(toResponse(entity));
     }
 
     @Transactional
     @HasPermission(value = { "PERMISSION_UPDATE" })
-    public PermissionResponse updatePermission(PermissionRequest request) {
-        if (request.getId() == null) {
+    public ApiResponse<PermissionResponse> updatePermission(ApiRequest<PermissionRequest> request) {
+        PermissionRequest data = request.getData();
+        if (data.getId() == null) {
             throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
         }
-        SystemPermissionEntity oldEntity = permissionRepository.findById(request.getId()).orElseThrow(
+        SystemPermissionEntity oldEntity = permissionRepository.findById(data.getId()).orElseThrow(
                 () -> AppException.builder().status(ErrorMessage.NOT_FOUND).build());
-        if (!request.getPermissionCode().equalsIgnoreCase(oldEntity.getPermissionCode())) {
+        if (!data.getPermissionCode().equalsIgnoreCase(oldEntity.getPermissionCode())) {
             throw AppException.builder().status(ErrorMessage.CANNOT_CHANGE).build();
         }
-        oldEntity.setPermissionName(request.getPermissionName());
-        oldEntity.setDescription(request.getDescription());
-        oldEntity.setModule(request.getModule());
+        oldEntity.setPermissionName(data.getPermissionName());
+        oldEntity.setDescription(data.getDescription());
+        oldEntity.setModule(data.getModule());
         SystemPermissionEntity saved = permissionRepository.saveAndFlush(oldEntity);
 
-        return toResponse(saved);
+        return ApiResponse.ok(toResponse(saved));
     }
 
     private PermissionResponse toResponse(SystemPermissionEntity entity) {

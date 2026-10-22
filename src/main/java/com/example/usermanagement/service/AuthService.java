@@ -1,6 +1,9 @@
 package com.example.usermanagement.service;
 
+import com.example.usermanagement.config.HasPermission;
 import com.example.usermanagement.config.UserSessionInfo;
+import com.example.usermanagement.dtos.common.ApiRequest;
+import com.example.usermanagement.dtos.common.ApiResponse;
 import com.example.usermanagement.dtos.request.LoginRequest;
 import com.example.usermanagement.dtos.response.LoginResponse;
 import com.example.usermanagement.dtos.response.UserResponse;
@@ -21,6 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -36,11 +40,12 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserSessionService sessionService;
 
-    public LoginResponse login(LoginRequest request){
-        if(!StringUtils.hasText(request.getUsername()) || !StringUtils.hasText(request.getPassword())){
+    public ApiResponse<LoginResponse> login(ApiRequest<LoginRequest> request){
+        LoginRequest data = request.getData();
+        if(!StringUtils.hasText(data.getUsername()) || !StringUtils.hasText(data.getPassword())){
             throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
         }
-        Optional<SystemUserEntity> optional = userRepository.findByUsername(request.getUsername());
+        Optional<SystemUserEntity> optional = userRepository.findByUsername(data.getUsername());
         if(optional.isEmpty()){
             throw AppException.builder().status(ErrorMessage.WRONG_USERNAME_PASSWORD).build();
         }
@@ -48,7 +53,7 @@ public class AuthService {
         if(!userEntity.getStatus().equals(StatusEnum.ACTIVE)){
             throw AppException.builder().status(ErrorMessage.ACCOUNT_INACTIVE).build();
         }
-        if (!passwordEncoder.matches(request.getPassword(), userEntity.getPassword())){
+        if (!passwordEncoder.matches(data.getPassword(), userEntity.getPassword())){
             throw AppException.builder().status(ErrorMessage.WRONG_USERNAME_PASSWORD).build();
         }
         if (userEntity.getRoleCode() == null){
@@ -76,24 +81,28 @@ public class AuthService {
 
         sessionService.cacheSession(userSessionInfo.getUsername(), userSessionInfo);
         sessionService.cacheToken(userSessionInfo.getUsername(), token);
-        return LoginResponse.builder()
+
+        return ApiResponse.ok(LoginResponse.builder()
                 .fullName(userEntity.getName())
                 .username(userEntity.getUsername())
                 .accessToken(token)
                 .permissions(permissions)
-                .build();
+                .build());
     }
 
-    public UserResponse getUser(String username){
+    @Transactional(readOnly = true)
+    @HasPermission(value = { "USER_VIEW" })
+    public ApiResponse<UserResponse> getUser(String username){
         SystemUserEntity entity = userRepository.findByUsername(username)
                 .orElseThrow(() -> AppException.builder().status(ErrorMessage.NOT_FOUND).build());
-        return toResponse(entity);
+        return ApiResponse.ok(toResponse(entity));
     }
 
     private UserResponse toResponse(SystemUserEntity entity){
         return UserResponse.builder()
                 .id(entity.getId())
                 .username(entity.getUsername())
+                .name(entity.getName())
                 .email(entity.getEmail())
                 .status(entity.getStatus())
                 .roleCode(entity.getRoleCode())

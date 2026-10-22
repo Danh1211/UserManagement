@@ -1,7 +1,5 @@
 package com.example.usermanagement.config;
 
-import com.example.usermanagement.enums.ErrorMessage;
-import com.example.usermanagement.exception.AppException;
 import com.example.usermanagement.exception.NoAuthenticationError;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,7 +7,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,13 +23,12 @@ public class PermissionAspect {
 
     public static void hasPermission(List<String> requiredPermission){
         UserSessionInfo sessionInfo = UserContext.get();
-        if (ObjectUtils.isEmpty(sessionInfo) || ObjectUtils.isEmpty(sessionInfo.getPermissions())){
-            throw new NoAuthenticationError(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện chức năng này");
+        if (ObjectUtils.isEmpty(sessionInfo)){
+            throw new NoAuthenticationError("Bạn chưa đăng nhập hoặc token không hợp lệ!");
         }
         List<String> permission = sessionInfo.getPermissions();
-        boolean allowed = requiredPermission.stream().anyMatch(permission::contains);
-        if(!allowed){
-            throw new NoAuthenticationError(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện chức năng này");
+        if (ObjectUtils.isEmpty(permission) || requiredPermission.stream().noneMatch(permission::contains)){
+            throw new NoAuthenticationError(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện chức năng này!");
         }
     }
 }

@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-import java.util.HashMap;
-
 @Getter
 @Setter
 public class NoAuthenticationError extends RuntimeException{
@@ -15,6 +13,12 @@ public class NoAuthenticationError extends RuntimeException{
     public NoAuthenticationError(HttpStatus status, String message) {
         super(message);
         this.status = status;
+        this.messageVi = message;
+    }
+
+    public NoAuthenticationError(String message) {
+        super(message);
+        this.status = HttpStatus.UNAUTHORIZED;
         this.messageVi = message;
     }
 }

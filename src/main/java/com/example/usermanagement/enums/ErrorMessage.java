@@ -5,24 +5,6 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorMessage implements IErrorMessage {
-    NO_AUTHENTICATION("NO_AUTHENTICATION",
-        "Bạn không có quyền thực hiện chức năng này",
-        "Vui lòng kiểm tra lại!"),
-
-    INVALID_SIGNATURE_JWT(
-            "INVALID.SIGNATURE.JWT",
-            "Chứ ký JWT không hợp lệ",
-            "Vui lòng thử lại!"),
-
-    JWT_EXPIRED(
-            "JWT.EXPIRED",
-            "JWT hết hạn",
-            "Vui lòng thử lại!"),
-
-    INVALID_JWT(
-            "INVALID.JWT",
-            "JWT không hợp lệ",
-            "Vui lòng thử lại!"),
 
     CANNOT_GENERATE_TOKEN(
             "CANNOT.GENERATE.TOKEN",
@@ -68,6 +50,11 @@ public enum ErrorMessage implements IErrorMessage {
             "CANNOT.CHANGE",
             "Không thể thay đổi",
             "Vui lòng nhập lại!"),
+
+    ERR_UNKNOWN(
+            "ERR_UNKNOWN",
+            "Không thể xử lý yêu cầu",
+            "Đã xảy ra lỗi trong quá trình xử lý."),
     ;
 
     private final String code;

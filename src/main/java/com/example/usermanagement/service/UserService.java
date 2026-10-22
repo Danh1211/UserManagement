@@ -1,6 +1,8 @@
 package com.example.usermanagement.service;
 
 import com.example.usermanagement.config.HasPermission;
+import com.example.usermanagement.dtos.common.ApiRequest;
+import com.example.usermanagement.dtos.common.ApiResponse;
 import com.example.usermanagement.dtos.request.ToggleRoleRequest;
 import com.example.usermanagement.dtos.response.UserResponse;
 import com.example.usermanagement.entity.SystemUserEntity;
@@ -10,7 +12,6 @@ import com.example.usermanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,25 +23,26 @@ public class UserService {
 
     @Transactional(readOnly = true)
     @HasPermission(value = {"USER_VIEW"})
-    public List<UserResponse> list(){
-        return userRepository.findAll().stream().map(this::toResponse).toList();
+    public ApiResponse<List<UserResponse>> list(){
+        return ApiResponse.ok(userRepository.findAll().stream().map(this::toResponse).toList());
     }
 
     @Transactional
     @HasPermission(value = {"USER_UPDATE"})
-    public UserResponse toggleRole(ToggleRoleRequest request){
-        if(request.getUsername().isEmpty() || request.getRoleCode().isEmpty()){
+    public ApiResponse<UserResponse> toggleRole(ApiRequest<ToggleRoleRequest> request){
+        ToggleRoleRequest data = request.getData();
+        if(data.getUsername().isEmpty() || data.getRoleCode().isEmpty()){
             throw AppException.builder().status(ErrorMessage.REQUEST_INVALID_PARAMS).build();
         }
-        Optional<SystemUserEntity> optional = userRepository.findByUsername(request.getUsername());
+        Optional<SystemUserEntity> optional = userRepository.findByUsername(data.getUsername());
         if(optional.isEmpty()){
             throw AppException.builder().status(ErrorMessage.NOT_FOUND).build();
         }
         SystemUserEntity entity = optional.orElseGet(optional::get);
-        entity.setRoleCode(request.getRoleCode());
+        entity.setRoleCode(data.getRoleCode());
         userRepository.save(entity);
 
-        return toResponse(entity);
+        return ApiResponse.ok(toResponse(entity));
     }
 
     private UserResponse toResponse(SystemUserEntity entity){

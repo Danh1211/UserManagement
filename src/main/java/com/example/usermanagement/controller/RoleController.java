@@ -1,5 +1,7 @@
 package com.example.usermanagement.controller;
 
+import com.example.usermanagement.dtos.common.ApiRequest;
+import com.example.usermanagement.dtos.common.ApiResponse;
 import com.example.usermanagement.dtos.request.RoleRequest;
 import com.example.usermanagement.dtos.response.RoleResponse;
 import com.example.usermanagement.service.RoleService;
@@ -18,22 +20,22 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<RoleResponse>> list(){
+    public ResponseEntity<ApiResponse<List<RoleResponse>>> list(){
         return ResponseEntity.ok(roleService.getListRole());
     }
 
     @GetMapping("/detail")
-    public ResponseEntity<RoleResponse> getRole(@RequestParam String roleCode){
+    public ResponseEntity<ApiResponse<RoleResponse>> getRole(@RequestParam String roleCode){
         return ResponseEntity.ok(roleService.getByRoleCode(roleCode));
     }
 
     @PostMapping("/create")
-    public ResponseEntity<RoleResponse> create(@RequestBody RoleRequest request){
+    public ResponseEntity<ApiResponse<RoleResponse>> create(@RequestBody ApiRequest<RoleRequest> request){
         return ResponseEntity.ok(roleService.createRole(request));
     }
 
     @PutMapping("/update")
-    public ResponseEntity<RoleResponse> update(@RequestBody RoleRequest request){
+    public ResponseEntity<ApiResponse<RoleResponse>> update(@RequestBody ApiRequest<RoleRequest> request){
         return ResponseEntity.ok(roleService.updateRole(request));
     }
 }

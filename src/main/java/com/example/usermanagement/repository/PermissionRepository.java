@@ -3,9 +3,9 @@ package com.example.usermanagement.repository;
 import com.example.usermanagement.entity.SystemPermissionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PermissionRepository extends JpaRepository<SystemPermissionEntity, Long> {
@@ -14,5 +14,5 @@ public interface PermissionRepository extends JpaRepository<SystemPermissionEnti
 
     boolean existsByPermissionCode(String permissionCode);
 
-    SystemPermissionEntity findByPermissionCode(String permissionCode);
+    Optional<SystemPermissionEntity> findByPermissionCode(String permissionCode);
 }

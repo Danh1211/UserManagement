@@ -1,7 +1,6 @@
 package com.example.usermanagement.config;
 
 import lombok.*;
-
 import java.util.List;
 
 @Getter
