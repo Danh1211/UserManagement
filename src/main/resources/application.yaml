@@ -23,8 +23,8 @@ spring:
       port: ${REDIS_PORT}
       timeout: ${REDIS_TIMEOUT}
 
-  security:
-    base64Secret: ${JWT_SECRET}
+jwt:
+    base64Secret: ${JWT_SECRET:ASyTTcIvfHA8QsI2c1Fvc8vZUcaeUgRlHH1VhsElDSYHsJ0CS5N0y5/yvKte+WDvYS3lL0oBzPK+1E83ACSdvA==}
     tokenValidityInSeconds: ${JWT_VALIDITY_SECONDS}
 
 app:

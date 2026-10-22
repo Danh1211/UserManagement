@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -38,7 +37,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
         this.sessionService = sessionService;
         this.resolver = resolver;
-        }
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -70,7 +69,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response); // luôn gọi đúng 1 lần
         } finally {
             UserContext.clear();
-            SecurityContextHolder.clearContext();
         }
     }
 
