@@ -63,7 +63,7 @@ public class AuthController {
                 .sameSite("Lax")
                 .build();
 
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
